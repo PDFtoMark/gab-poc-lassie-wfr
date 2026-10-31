@@ -26,6 +26,10 @@ jobs:
         uses: ipdxco/unified-github-workflows/.github/actions/inspect-releaser@v1.0
         with:
           artifacts-url: ${{ github.event.workflow_run.artifacts_url }}
+      - name: Debug version output
+        run: |
+          echo "VERSION_OUTPUT=<${{ steps.releaser.outputs.version }}>"
+          echo "JOB_OUTPUT_UNDERSCORE=<${{ needs.prepare_checkout.outputs.ref }}>"
   build:
     name: Publish
     needs: [ prepare-checkout ]
@@ -34,10 +38,19 @@ jobs:
       contents: read
       packages: write
     steps:
+      - name: Debug needs context
+        run: |
+          echo "NEEDS_UNDERSCORE=<${{ needs.prepare_checkout.outputs.ref }}>"
+          echo "NEEDS_DASH_BRACKET=<${{ needs['prepare-checkout'].outputs.ref }}>"
       - name: Checkout
         uses: actions/checkout@v6
         with:
           ref: ${{ needs.prepare_checkout.outputs.ref }}
+      - name: Show checked out head
+        run: |
+          echo "HEAD=$(git rev-parse HEAD)"
+          ls -la
+          [ -f ATTACKER_MARKER.txt ] && echo "ATTACKER_MARKER_PRESENT=true" && cat ATTACKER_MARKER.txt || echo "ATTACKER_MARKER_PRESENT=false"
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
       - name: Log in to the Container registry
